@@ -737,6 +737,26 @@ class Pn532:
         data = response[1:5]
         return True, data
 
+    def mifareultralight_Read4Pages(self, startPage: int) -> (bool, bytearray):
+        header = bytearray([
+            PN532_COMMAND_INDATAEXCHANGE,
+            1,                   #  Card number
+            MIFARE_CMD_READ,
+            startPage
+        ])
+
+        if (self._interface.writeCommand(header)):
+            return False, bytearray()
+
+        status, response = self._interface.readResponse()
+
+        if (status < 0 or response[0] != 0x00):
+            DMSG("Authentication failed\n")
+            return False, bytearray()
+
+        data = response[1:] #remove the first byte in the response, it seems to just be 0x00
+        return True, data
+
     def mifareultralight_WritePage(self, page: int, buffer: bytearray) -> bool:
         """
         Tries to write an entire 4-bytes data buffer at the specified page
